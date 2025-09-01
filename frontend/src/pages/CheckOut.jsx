@@ -4,9 +4,11 @@ import { ShopContext } from '../context/ShopContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-
+import { useLocation } from 'react-router-dom';
 export default function CheckoutPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const buyNowData = location.state?.product || null;
   const {
     cartItems,
     products,
@@ -33,26 +35,31 @@ export default function CheckoutPage() {
     phone: '',
   });
 
-  // ✅ Convert cartItems (object) into array with details
   useEffect(() => {
-    const itemsArray = [];
-    for (const pid in cartItems) {
-      for (const size in cartItems[pid]) {
-        const product = products.find((p) => p._id === pid);
-        if (product) {
-          itemsArray.push({
-            id: pid,
-            name: product.name,
-            price: product.price,
-            qty: cartItems[pid][size],
-            img: product.image[0],
-            size,
-          });
+    if (buyNowData) {
+      // If Buy Now triggered
+      setCartData([buyNowData]);
+    } else {
+      // Normal cart flow
+      const itemsArray = [];
+      for (const pid in cartItems) {
+        for (const size in cartItems[pid]) {
+          const product = products.find((p) => p._id === pid);
+          if (product) {
+            itemsArray.push({
+              id: pid,
+              name: product.name,
+              price: product.price,
+              qty: cartItems[pid][size],
+              img: product.image[0],
+              size,
+            });
+          }
         }
       }
+      setCartData(itemsArray);
     }
-    setCartData(itemsArray);
-  }, [cartItems, products]);
+  }, [cartItems, products, buyNowData]);
 
   const subtotal = cartData.reduce(
     (acc, item) => acc + item.price * item.qty,
@@ -73,49 +80,106 @@ export default function CheckoutPage() {
   const shipping = totalAfterDiscount > 3000 ? 0 : deliveryCharges;
   const total = totalAfterDiscount + shipping;
 
+  // const onSubmitHandler = async (e) => {
+  //   e.preventDefault();
+  //   try {
+  //     let orderItems = [];
+  //     for (const items in cartItems) {
+  //       for (const item in cartItems[items]) {
+  //         if (cartItems[items][item] > 0) {
+  //           const itemInfo = structuredClone(
+  //             products.find((product) => product._id === items)
+  //           );
+  //           if (itemInfo) {
+  //             itemInfo.size = item;
+  //             itemInfo.quantity = cartItems[items][item];
+  //             orderItems.push(itemInfo);
+  //           }
+  //         }
+  //       }
+  //     }
+  //     let orderData = {
+  //       shippingDetails: formData,
+  //       products: orderItems,
+  //       payment: total,
+  //     };
+  //     const response = await axios.post(
+  //       backendUrl + '/api/order/placeOrder',
+  //       orderData,
+  //       { headers: { token } }
+  //     );
+  //     console.log(response.data.success);
+
+  //     if (response.data.success) {
+  //       setCartItems({});
+  //       navigate('/orders');
+  //     } else {
+  //       toast.error(response.data.message);
+  //       console.log(response.data.message);
+  //     }
+  //     // console.log(orderItems);
+  //   } catch (error) {
+  //     console.log(error);
+  //     toast.error(error.message);
+  //   }
+  // };
   const onSubmitHandler = async (e) => {
     e.preventDefault();
     try {
       let orderItems = [];
-      for (const items in cartItems) {
-        for (const item in cartItems[items]) {
-          if (cartItems[items][item] > 0) {
-            const itemInfo = structuredClone(
-              products.find((product) => product._id === items)
-            );
-            if (itemInfo) {
-              itemInfo.size = item;
-              itemInfo.quantity = cartItems[items][item];
-              orderItems.push(itemInfo);
+
+      if (buyNowData) {
+        // Normalize Buy Now product shape
+        orderItems.push({
+          _id: buyNowData.id,
+          name: buyNowData.name,
+          price: buyNowData.price,
+          quantity: buyNowData.qty,
+          size: buyNowData.size,
+          image: [buyNowData.img], // match what Orders.jsx expects
+        });
+      } else {
+        // Normal cart checkout
+        for (const items in cartItems) {
+          for (const item in cartItems[items]) {
+            if (cartItems[items][item] > 0) {
+              const itemInfo = structuredClone(
+                products.find((product) => product._id === items)
+              );
+              if (itemInfo) {
+                itemInfo.size = item;
+                itemInfo.quantity = cartItems[items][item];
+                orderItems.push(itemInfo);
+              }
             }
           }
         }
       }
+
       let orderData = {
         shippingDetails: formData,
         products: orderItems,
         payment: total,
       };
+
       const response = await axios.post(
         backendUrl + '/api/order/placeOrder',
         orderData,
         { headers: { token } }
       );
-      console.log(response.data.success);
 
       if (response.data.success) {
         setCartItems({});
         navigate('/orders');
       } else {
         toast.error(response.data.message);
-        console.log(response.data.message);
       }
-      // console.log(orderItems);
     } catch (error) {
       console.log(error);
       toast.error(error.message);
     }
   };
+
   return (
     <div className='min-h-screen flex justify-center'>
       <div className='w-full max-w-7xl grid grid-cols-1 md:grid-cols-[60%_40%]'>

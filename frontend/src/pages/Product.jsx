@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ShopContext } from '../context/ShopContext';
+import { useNavigate } from 'react-router-dom';
 import {
   FaMinus,
   FaPlus,
@@ -13,6 +14,7 @@ import RelatedProducts from '../ui/RelatedProducts';
 import { toast } from 'react-toastify';
 
 export default function Product() {
+  const navigate = useNavigate();
   const { productId } = useParams();
   const { products, addToCart } = useContext(ShopContext);
   const [productData, setProductData] = useState(null);
@@ -148,7 +150,24 @@ export default function Product() {
             >
               Add to cart
             </button>
-            <button className='flex-1 bg-[#2a4125] text-white py-3 rounded-full cursor-pointer '>
+            <button
+              className='flex-1 bg-[#2a4125] text-white py-3 rounded-full cursor-pointer'
+              onClick={() => {
+                navigate('/checkout', {
+                  state: {
+                    buyNow: true,
+                    product: {
+                      id: productData._id,
+                      name: productData.name,
+                      price: productData.price,
+                      qty: quantity,
+                      img: productData.image[0],
+                      size: selectedSize,
+                    },
+                  },
+                });
+              }}
+            >
               Buy it now
             </button>
           </div>

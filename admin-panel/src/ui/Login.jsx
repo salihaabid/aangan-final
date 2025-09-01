@@ -6,8 +6,8 @@ import { backendUrl } from '../layout/Main';
 import { toast } from 'react-toastify';
 
 export default function Login({ setToken }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('aangan@admin.com');
+  const [password, setPassword] = useState('admincolony@1947!!');
 
   const handleSubmit = async (e) => {
     e.preventDefault();

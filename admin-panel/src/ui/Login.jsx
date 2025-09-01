@@ -12,7 +12,7 @@ export default function Login({ setToken }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${backendUrl}/api/user/admin`, {
+      const response = await axios.post(backendUrl + '/api/user/admin', {
         email,
         password,
       });

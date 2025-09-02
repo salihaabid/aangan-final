@@ -1,5 +1,5 @@
 import { useContext, useState } from 'react';
-import { LuSearch, LuUser, LuShoppingBag } from 'react-icons/lu';
+import { LuSearch, LuUser, LuShoppingBag, LuMenu, LuX } from 'react-icons/lu';
 import { Link, NavLink } from 'react-router-dom';
 import { assets } from '../assets/assets';
 import { ShopContext } from '../context/ShopContext';
@@ -8,9 +8,10 @@ import { useNavigate } from 'react-router-dom';
 export default function Navbar() {
   const navigate = useNavigate();
   const [openSubmenu, setOpenSubmenu] = useState(false);
+  const [openSidebar, setOpenSidebar] = useState(false);
   const { setShowSearch, getCartCount, token, setToken, setCartItems } =
     useContext(ShopContext);
-  // Use NavLink's isActive instead of manual state
+
   const navLinkClass = ({ isActive }) =>
     `!text-[20px] !bg-transparent focus:!bg-transparent active:outline-none 
      hover:text-[#2a4125] hover:underline hover:decoration-[#2a4125]
@@ -20,155 +21,27 @@ export default function Navbar() {
          : 'text-[#77846a]'
      }`;
 
-  const handleClick = () => {
-    setOpenSubmenu(false);
-  };
+  const handleClick = () => setOpenSubmenu(false);
+
   const logout = () => {
     localStorage.removeItem('token');
     navigate('/login');
-
     setToken('');
     setCartItems({});
   };
+
   return (
     <header>
       <div className='navbar xl:px-24'>
-        {/* Left - Logo */}
-        <div className='navbar-start'>
-          {/* Mobile Drawer */}
-          <div className='lg:hidden'>
-            <div className='drawer drawer-end'>
-              <input
-                id='menu-drawer'
-                type='checkbox'
-                className='drawer-toggle'
-              />
-              <div className='drawer-content'>
-                <label htmlFor='menu-drawer' className='btn btn-ghost'>
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    className='h-7 w-7 text-[#2a4125]'
-                    fill='none'
-                    viewBox='0 0 24 24'
-                    stroke='currentColor'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth='2'
-                      d='M4 6h16M4 12h16M4 18h16'
-                    />
-                  </svg>
-                </label>
-              </div>
-
-              {/* Sidebar Drawer Menu */}
-              <div className='drawer-side'>
-                <label
-                  htmlFor='menu-drawer'
-                  aria-label='close sidebar'
-                  className='drawer-overlay'
-                ></label>
-                <ul className='menu p-4 w-72 min-h-full bg-[#fef7e5] text-base-content shadow-lg'>
-                  {/* Close button */}
-                  <li className='flex justify-end mb-2'>
-                    <label
-                      htmlFor='menu-drawer'
-                      className='btn btn-sm btn-ghost text-[#2a4125]'
-                    >
-                      ✕
-                    </label>
-                  </li>
-
-                  {/* Mobile Menu Items */}
-                  <li>
-                    <NavLink to='/' className={navLinkClass}>
-                      Home
-                    </NavLink>
-                  </li>
-                  <li className='relative'>
-                    <button
-                      onClick={() => setOpenSubmenu(!openSubmenu)}
-                      className={navLinkClass({ isActive: false })}
-                    >
-                      Products
-                    </button>
-
-                    {openSubmenu && (
-                      <ul
-                        className='absolute left-0 p-2 pr-[25px] bg-[#fef7e5] rounded-[15px] shadow-md z-50'
-                        style={{
-                          borderTop: '2px solid #2a4125',
-                          borderLeft: '2px solid #2a4125',
-                          borderRight: '2px solid #2a4125',
-                          borderBottom: '4px solid #2a4125',
-                          padding: '10px 80px 0px 10px',
-                        }}
-                      >
-                        <li>
-                          <NavLink
-                            to='/Collection'
-                            onClick={() => setOpenSubmenu(false)}
-                            className={navLinkClass}
-                          >
-                            Shop All
-                          </NavLink>
-                        </li>
-                        <li>
-                          <NavLink
-                            to='/Cheddar'
-                            onClick={() => setOpenSubmenu(false)}
-                            className={navLinkClass}
-                          >
-                            Cheddar
-                          </NavLink>
-                        </li>
-                        <li>
-                          <NavLink
-                            to='/Mozzarella'
-                            onClick={() => setOpenSubmenu(false)}
-                            className={navLinkClass}
-                          >
-                            Mozzarella
-                          </NavLink>
-                        </li>
-                        <li>
-                          <NavLink
-                            to='/Shredded'
-                            onClick={() => setOpenSubmenu(false)}
-                            className={navLinkClass}
-                          >
-                            Shredded
-                          </NavLink>
-                        </li>
-                      </ul>
-                    )}
-                  </li>
-
-                  <li>
-                    <NavLink to='/Deals' className={navLinkClass}>
-                      Deals
-                    </NavLink>
-                  </li>
-                  <li>
-                    <NavLink to='/Business' className={navLinkClass}>
-                      Business Customers
-                    </NavLink>
-                  </li>
-                  <li>
-                    <NavLink to='/Contact' className={navLinkClass}>
-                      Contact Us
-                    </NavLink>
-                  </li>
-                  <li>
-                    <NavLink to='/About' className={navLinkClass}>
-                      About Us
-                    </NavLink>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
+        {/* Left - Logo + Mobile Menu */}
+        <div className='navbar-start flex items-center gap-4'>
+          {/* Mobile Hamburger */}
+          <button
+            className='lg:hidden text-[#2a4125] cursor-pointer'
+            onClick={() => setOpenSidebar(true)}
+          >
+            <LuMenu size={30} />
+          </button>
 
           {/* Logo */}
           <NavLink
@@ -302,12 +175,10 @@ export default function Navbar() {
                   }}
                 >
                   {!token ? (
-                    // 🔹 If not logged in
                     <Link to='/login'>
                       <p className='cursor-pointer hover:text-black'>Login</p>
                     </Link>
                   ) : (
-                    // 🔹 If logged in
                     <>
                       <Link to='/orders'>
                         <p className='cursor-pointer hover:text-black'>
@@ -333,14 +204,100 @@ export default function Navbar() {
                 strokeWidth={1.5}
                 className='text-[#2a4125] transition-transform duration-200 hover:scale-110 cursor-pointer'
               />
-
-              {/* Badge */}
               <p className='absolute right-[-5px] bottom-[-5px] w-4 h-4 flex items-center justify-center text-xs bg-[#2a4125] text-white rounded-full'>
                 {getCartCount()}
               </p>
             </Link>
           </div>
         </div>
+      </div>
+
+      {/* Sidebar for Mobile */}
+      <div
+        className={`fixed top-0 left-0 h-full w-64 bg-[#fef7e5] shadow-lg z-50 transform transition-transform duration-300 ${
+          openSidebar ? 'translate-x-0' : '-translate-x-full'
+        }`}
+        style={{
+          borderRight: '4px solid #2a4125',
+        }}
+      >
+        {/* Close Button */}
+        <div className='flex justify-between items-center p-4 border-b border-[#2a4125]'>
+          <img src={assets.logo} alt='Logo' className='h-10' />
+          <button
+            className='text-[#2a4125]'
+            onClick={() => setOpenSidebar(false)}
+          >
+            <LuX size={28} />
+          </button>
+        </div>
+
+        {/* Sidebar Links */}
+        <ul className='flex flex-col p-4 gap-4'>
+          <NavLink
+            to='/'
+            className={navLinkClass}
+            onClick={() => setOpenSidebar(false)}
+          >
+            Home
+          </NavLink>
+          <NavLink
+            to='/Collection'
+            className={navLinkClass}
+            onClick={() => setOpenSidebar(false)}
+          >
+            Shop All
+          </NavLink>
+          <NavLink
+            to='/Cheddar'
+            className={navLinkClass}
+            onClick={() => setOpenSidebar(false)}
+          >
+            Cheddar
+          </NavLink>
+          <NavLink
+            to='/Mozzarella'
+            className={navLinkClass}
+            onClick={() => setOpenSidebar(false)}
+          >
+            Mozzarella
+          </NavLink>
+          <NavLink
+            to='/Shredded'
+            className={navLinkClass}
+            onClick={() => setOpenSidebar(false)}
+          >
+            Shredded
+          </NavLink>
+          <NavLink
+            to='/Deals'
+            className={navLinkClass}
+            onClick={() => setOpenSidebar(false)}
+          >
+            Deals
+          </NavLink>
+          <NavLink
+            to='/Business'
+            className={navLinkClass}
+            onClick={() => setOpenSidebar(false)}
+          >
+            Business Customers
+          </NavLink>
+          <NavLink
+            to='/Contact'
+            className={navLinkClass}
+            onClick={() => setOpenSidebar(false)}
+          >
+            Contact Us
+          </NavLink>
+          <NavLink
+            to='/About'
+            className={navLinkClass}
+            onClick={() => setOpenSidebar(false)}
+          >
+            About Us
+          </NavLink>
+        </ul>
       </div>
     </header>
   );

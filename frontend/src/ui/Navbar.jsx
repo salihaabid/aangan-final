@@ -175,9 +175,19 @@ export default function Navbar() {
                   }}
                 >
                   {!token ? (
-                    <Link to='/login'>
-                      <p className='cursor-pointer hover:text-black'>Login</p>
-                    </Link>
+                    <>
+                      <Link to='/login'>
+                        <p className='cursor-pointer hover:text-black'>Login</p>
+                      </Link>
+                      <a
+                        href='https://aangan-admin.vercel.app/'
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='cursor-pointer hover:text-black'
+                      >
+                        Admin Panel
+                      </a>
+                    </>
                   ) : (
                     <>
                       <Link to='/orders'>
@@ -185,6 +195,7 @@ export default function Navbar() {
                           Orders
                         </p>
                       </Link>
+
                       <p
                         className='cursor-pointer hover:text-black'
                         onClick={logout}

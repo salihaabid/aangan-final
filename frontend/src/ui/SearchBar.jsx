@@ -1,12 +1,14 @@
 import React, { useContext, useRef, useEffect } from 'react';
 import { ShopContext } from '../context/ShopContext';
 import { FaSearch, FaTimes } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 export default function SearchBar() {
   const { search, setSearch, showSearch, setShowSearch } =
     useContext(ShopContext);
 
   const inputRef = useRef(null);
+  const navigate = useNavigate();
 
   // Auto focus input when searchbar opens
   useEffect(() => {
@@ -19,6 +21,14 @@ export default function SearchBar() {
   const handleClose = () => {
     setSearch(''); // clear input
     setShowSearch(false); // close searchbar
+  };
+
+  // Handle Enter key → navigate to ShopAll page
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      navigate('/Collection'); // 👈 route of your ShopAll.jsx page
+      setShowSearch(false); // close searchbar after searching
+    }
   };
 
   if (!showSearch) return null;
@@ -42,20 +52,10 @@ export default function SearchBar() {
             type='text'
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={handleKeyDown} // 👈 added Enter key handling
             placeholder='Search for cheeses, deals, or collections...'
             className='flex-1 px-4 py-3 bg-transparent focus:outline-none text-gray-700 text-lg placeholder-gray-400'
           />
-
-          {/* Clear Button (shows only if typing) */}
-          {/* {search && (
-            <button
-              onClick={() => setSearch('')}
-              className='p-2 text-gray-400 hover:text-gray-600 transition cursor-pointer'
-              aria-label='Clear search'
-            >
-              <FaTimes size={18} />
-            </button>
-          )} */}
 
           {/* Close Button */}
           <button

@@ -220,11 +220,12 @@ export default function CheckoutPage() {
           </select>
           <div className='sm:grid sm:grid-cols-2 sm:gap-3'>
             {/* First name */}
+
             <div className='w-full mb-3'>
               <label htmlFor='firstName' className='sr-only'>
                 First name *
               </label>
-              <div className='border rounded-lg px-4 py-2 focus-within:ring-2 focus-within:ring-[#77846a]'>
+              <div className='border rounded-lg px-4 py-2 text-[#2a4125] accent-[#2a4125] focus-within:ring-0 focus-within:outline-none focus-within:border-[#2a4125]'>
                 <input
                   id='firstName'
                   name='firstName'
@@ -235,29 +236,30 @@ export default function CheckoutPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, firstName: e.target.value })
                   }
-                  className='w-full bg-transparent border-none outline-none focus:ring-0'
+                  className='w-full bg-transparent border-none outline-none focus:ring-0 focus:outline-none autofill:bg-transparent'
                   required
                 />
               </div>
             </div>
 
             {/* Last name */}
+
             <div className='w-full mb-3'>
-              <label htmlFor='lastName' className='sr-only'>
+              <label htmlFor='firstName' className='sr-only'>
                 Last name *
               </label>
-              <div className='border rounded-lg px-4 py-2 focus-within:ring-2 focus-within:ring-[#77846a]'>
+              <div className='border rounded-lg px-4 py-2 text-[#2a4125] accent-[#2a4125] focus-within:ring-0 focus-within:outline-none focus-within:border-[#2a4125]'>
                 <input
                   id='lastName'
                   name='lastName'
                   type='text'
-                  autoComplete='family-name'
+                  autoComplete='given-name'
                   placeholder='Last name *'
                   value={formData.lastName}
                   onChange={(e) =>
                     setFormData({ ...formData, lastName: e.target.value })
                   }
-                  className='w-full bg-transparent border-none outline-none focus:ring-0'
+                  className='w-full bg-transparent border-none outline-none focus:ring-0 focus:outline-none autofill:bg-transparent'
                   required
                 />
               </div>
@@ -292,7 +294,7 @@ export default function CheckoutPage() {
               <label htmlFor='city' className='sr-only'>
                 City *
               </label>
-              <div className='border rounded-lg px-4 py-2 focus-within:ring-2 focus-within:ring-[#77846a]'>
+              <div className='border rounded-lg px-4 py-2 text-[#2a4125] accent-[#2a4125] focus-within:ring-0 focus-within:outline-none focus-within:border-[#2a4125]'>
                 <input
                   id='city'
                   name='city'
@@ -302,7 +304,7 @@ export default function CheckoutPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, city: e.target.value })
                   }
-                  className='w-full bg-transparent border-none outline-none focus:ring-0'
+                  className='w-full bg-transparent border-none outline-none focus:ring-0 focus:outline-none autofill:bg-transparent'
                   required
                 />
               </div>
@@ -313,7 +315,7 @@ export default function CheckoutPage() {
               <label htmlFor='postalCode' className='sr-only'>
                 Postal code
               </label>
-              <div className='border rounded-lg px-4 py-2 focus-within:ring-2 focus-within:ring-[#77846a]'>
+              <div className='border rounded-lg px-4 py-2 text-[#2a4125] accent-[#2a4125] focus-within:ring-0 focus-within:outline-none focus-within:border-[#2a4125]'>
                 <input
                   id='postalCode'
                   name='postalCode'
@@ -323,7 +325,7 @@ export default function CheckoutPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, postalCode: e.target.value })
                   }
-                  className='w-full bg-transparent border-none outline-none focus:ring-0'
+                  className='w-full bg-transparent border-none outline-none focus:ring-0 focus:outline-none autofill:bg-transparent'
                 />
               </div>
             </div>

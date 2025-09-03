@@ -18,3 +18,14 @@ body {
   outline: none !important;
   box-shadow: none !important;
 }
+
+/* Kill Chrome autofill ugly bg */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px transparent inset !important; /* replace #fefefe with ur bg color */
+  -webkit-text-fill-color: #2a4125 !important; /* your text color */
+  transition: background-color 5000s ease-in-out 0s;
+}

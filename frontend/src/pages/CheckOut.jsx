@@ -1,5 +1,4 @@
 import { useState, useContext, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { ShopContext } from '../context/ShopContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -16,6 +15,7 @@ export default function CheckoutPage() {
     backendUrl,
     token,
     setCartItems,
+    user,
   } = useContext(ShopContext);
 
   const [coupon, setCoupon] = useState('');
@@ -80,49 +80,6 @@ export default function CheckoutPage() {
   const shipping = totalAfterDiscount > 3000 ? 0 : deliveryCharges;
   const total = totalAfterDiscount + shipping;
 
-  // const onSubmitHandler = async (e) => {
-  //   e.preventDefault();
-  //   try {
-  //     let orderItems = [];
-  //     for (const items in cartItems) {
-  //       for (const item in cartItems[items]) {
-  //         if (cartItems[items][item] > 0) {
-  //           const itemInfo = structuredClone(
-  //             products.find((product) => product._id === items)
-  //           );
-  //           if (itemInfo) {
-  //             itemInfo.size = item;
-  //             itemInfo.quantity = cartItems[items][item];
-  //             orderItems.push(itemInfo);
-  //           }
-  //         }
-  //       }
-  //     }
-  //     let orderData = {
-  //       shippingDetails: formData,
-  //       products: orderItems,
-  //       payment: total,
-  //     };
-  //     const response = await axios.post(
-  //       backendUrl + '/api/order/placeOrder',
-  //       orderData,
-  //       { headers: { token } }
-  //     );
-  //     console.log(response.data.success);
-
-  //     if (response.data.success) {
-  //       setCartItems({});
-  //       navigate('/orders');
-  //     } else {
-  //       toast.error(response.data.message);
-  //       console.log(response.data.message);
-  //     }
-  //     // console.log(orderItems);
-  //   } catch (error) {
-  //     console.log(error);
-  //     toast.error(error.message);
-  //   }
-  // };
   const onSubmitHandler = async (e) => {
     e.preventDefault();
     try {
@@ -167,11 +124,11 @@ export default function CheckoutPage() {
         orderData,
         { headers: { token } }
       );
-
       if (response.data.success) {
         setCartItems({});
         navigate('/orders');
       } else {
+        console.log(response.data);
         toast.error(response.data.message);
       }
     } catch (error) {

@@ -4,7 +4,10 @@ import userModel from '../models/userModel.js';
 
 const placeOrder = async (req, res) => {
   try {
-    const { userId, products, payment, shippingDetails } = req.body;
+    const userId = req.user._id;
+
+    const { products, payment, shippingDetails } = req.body;
+
     if (!userId) {
       return res.json({ success: false, message: 'User ID required' });
     }
@@ -32,7 +35,7 @@ const placeOrder = async (req, res) => {
 // USER ORDER DATA
 const userOrders = async (req, res) => {
   try {
-    const { userId } = req.body;
+    const userId = req.user._id;
     if (!userId) {
       return res.json({ success: false, message: 'User ID required' });
     }

@@ -15,6 +15,7 @@ const ShopContextProvider = (props) => {
   const [cartItems, setCartItems] = useState({});
   const [products, setProducts] = useState([]);
   const [token, setToken] = useState('');
+  const [user, setUser] = useState(null);
 
   const addToCart = async (productId, quantity = 1, size) => {
     let cartData = structuredClone(cartItems);
@@ -63,29 +64,6 @@ const ShopContextProvider = (props) => {
     setCartItems({}); // or your initial empty structure
   };
 
-  // const updateQuantity = async (productId, size, quantity) => {
-  //   let cartData = structuredClone(cartItems);
-  //   cartData[productId][size] = quantity;
-  //   setCartItems(cartData);
-
-  //   if (token) {
-  //     try {
-  //       await axios.post(
-  //         backendUrl + '/api/cart/update',
-  //         {
-  //           productId,
-  //           size,
-  //           quantity,
-  //         },
-  //         { headers: { token } }
-  //       );
-  //     } catch (error) {
-  //       console.error(error);
-  //       toast.error(error.message);
-  //     }
-  //   }
-  // };
-
   const updateQuantity = async (productId, size, quantity) => {
     let cartData = structuredClone(cartItems);
 
@@ -129,21 +107,6 @@ const ShopContextProvider = (props) => {
       toast.error(error.message);
     }
   };
-  // const getUserCart = async (token) => {
-  //   try {
-  //     const response = await axios.post(
-  //       backendUrl + '/api/cart/get',
-  //       {},
-  //       { headers: { token } }
-  //     );
-  //     if (response.data.success) {
-  //       setCartItems(response.data.cartData);
-  //     }
-  //   } catch (error) {
-  //     console.log(error);
-  //     toast.error(error.message);
-  //   }
-  // };
 
   const getUserCart = async (token) => {
     if (!token) {
@@ -174,6 +137,24 @@ const ShopContextProvider = (props) => {
       getUserCart(localStorage.getItem('token'));
     }
   }, []);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (token) {
+        try {
+          const { data } = await axios.get(backendUrl + '/api/user/me', {
+            headers: { token },
+          });
+          setUser(data.user);
+        } catch (error) {
+          console.error(error);
+          setUser(null);
+        }
+      }
+    };
+
+    fetchUser();
+  }, [token]);
   const value = {
     products,
     deliveryCharges,
@@ -191,6 +172,8 @@ const ShopContextProvider = (props) => {
     setToken,
     getUserCart,
     setCartItems,
+    user,
+    setUser,
   };
   return (
     <ShopContext.Provider value={value}>{props.children}</ShopContext.Provider>

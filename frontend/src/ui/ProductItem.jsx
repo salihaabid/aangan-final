@@ -45,7 +45,6 @@ export default function ProductItem({ product, id, name, price, rating }) {
           </p>
 
           {/* Rating */}
-          {/* Rating */}
           {rating !== undefined && rating !== null && (
             <div className='flex items-center justify-center gap-1 mt-2'>
               {Array.from({ length: 5 }).map((_, i) => (
@@ -59,7 +58,7 @@ export default function ProductItem({ product, id, name, price, rating }) {
                 </span>
               ))}
               <span className='text-xs sm:text-sm text-[#2a4125] ml-1'>
-                ({rating})
+                {rating.toFixed(1)} ({product.reviews.length || 0})
               </span>
             </div>
           )}

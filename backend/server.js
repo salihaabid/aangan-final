@@ -1,3 +1,5 @@
+import { Server } from 'socket.io';
+import http from 'http';
 import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
@@ -8,33 +10,47 @@ import productRouter from './routes/productRouter.js';
 import cartRouter from './routes/cartRouter.js';
 import orderRouter from './routes/orderRouter.js';
 
-// App Config
 const app = express();
+const server = http.createServer(app); // wrap express in http server
+const io = new Server(server, {
+  cors: {
+    origin: 'http://localhost:5173', // ✅ Vite frontend
+    methods: ['GET', 'POST'],
+  },
+});
+
 const PORT = process.env.PORT || 5000;
 connectDB();
 connectCloudinary();
 
-// Middleware
-app.use(cors()); // Enable CORS
-app.use(express.json()); // Parse JSON bodies
+app.use(
+  cors({
+    origin: 'http://localhost:5173', // ✅ also fix CORS middleware
+  })
+);
+app.use(express.json());
 
-// Api endpoints
 app.use('/api/user', userRouter);
 app.use('/api/product', productRouter);
 app.use('/api/cart', cartRouter);
 app.use('/api/order', orderRouter);
 
-// Basic route for testing
 app.get('/', (req, res) => {
   res.send('✅ Server is running fine!');
 });
 
-// Example API route
-app.get('/api/hello', (req, res) => {
-  res.json({ message: 'Hello from the backend!' });
+io.on('connection', (socket) => {
+  console.log('🔥 New client connected:', socket.id);
+
+  socket.on('newReview', (review) => {
+    io.emit('newReview', review); // broadcast to everyone
+  });
+
+  socket.on('disconnect', () => {
+    console.log('❌ Client disconnected:', socket.id);
+  });
 });
 
-// Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
 });

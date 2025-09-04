@@ -29,7 +29,7 @@ export default function BestSeller() {
             name={product.name}
             price={product.price}
             brand={product.brand}
-            rating={product.rating}
+            rating={product.averageRating}
           />
         ))}
       </div>

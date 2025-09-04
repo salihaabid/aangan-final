@@ -1,7 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { ShopContext } from '../context/ShopContext';
-import { useNavigate } from 'react-router-dom';
 import {
   FaMinus,
   FaPlus,
@@ -9,32 +8,147 @@ import {
   FaCheckSquare,
   FaHeart,
   FaStar,
+  FaPaperPlane,
 } from 'react-icons/fa';
 import RelatedProducts from '../ui/RelatedProducts';
 import { toast } from 'react-toastify';
+import axios from 'axios';
+import { io } from 'socket.io-client';
+import ReviewsSection from '../ui/ReviewSection';
 
 export default function Product() {
   const navigate = useNavigate();
   const { productId } = useParams();
-  const { products, addToCart } = useContext(ShopContext);
+  const { products, addToCart, backendUrl, token, user } =
+    useContext(ShopContext);
+
   const [productData, setProductData] = useState(null);
   const [image, setImage] = useState('');
   const [quantity, setQuantity] = useState(1);
-  const [selectedSize, setSelectedSize] = useState(null); // <-- NEW state
+  const [selectedSize, setSelectedSize] = useState(null);
+
+  // Reviews state
+  const [reviews, setReviews] = useState([]);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [reviewError, setReviewError] = useState('');
+
+  // Socket.io
+  const socket = io('http://localhost:5000', {
+    transports: ['websocket'],
+  });
+
+  // Fetch product + reviews
+  useEffect(() => {
+    fetchProductData();
+
+    const fetchReviews = async () => {
+      try {
+        const res = await axios.get(
+          `${backendUrl}/api/product/${productId}/reviews`
+        );
+        if (res.data.success) {
+          setReviews(res.data.reviews);
+        }
+      } catch (error) {
+        console.error('Error fetching reviews', error);
+      }
+    };
+
+    fetchReviews();
+    setQuantity(1);
+  }, [productId, products]);
+
+  // 🔹 Socket listeners for live updates
+  useEffect(() => {
+    socket.on('reviewAdded', (newReview) => {
+      setReviews((prev) => [...prev, newReview]);
+    });
+
+    socket.on('replyAdded', (reply) => {
+      console.log('Admin reply received:', reply);
+      // optional: attach reply to specific review later
+    });
+
+    return () => {
+      socket.off('reviewAdded');
+      socket.off('replyAdded');
+    };
+  }, [socket]);
+
+  const handleDeleteSubmit = async (rev) => {
+    try {
+      const res = await axios.delete(
+        `${backendUrl}/api/product/${productId}/review/${rev._id}`,
+        {
+          headers: { token },
+        }
+      );
+      if (res.data.success) {
+        setReviews(res.data.reviews);
+        toast.success('Review deleted');
+      } else {
+        toast.error(res.data.message);
+      }
+    } catch (error) {
+      console.error('Delete review error', error);
+      toast.error('Error deleting review');
+    }
+  };
+  const handleReviewSubmit = async () => {
+    if (!token) {
+      toast.error('Login/Signup first to add review');
+      setReviewError('⚠️ Please login or signup first to add a review');
+      return;
+    }
+
+    if (!rating || !comment.trim()) {
+      toast.error('Please add rating and comment');
+      setReviewError('⚠️ Rating and comment are required');
+      return;
+    }
+
+    try {
+      const reviewData = { rating, comment };
+
+      const res = await axios.post(
+        `${backendUrl}/api/product/${productId}/review`,
+        reviewData,
+        {
+          headers: { token },
+        }
+      );
+      console.log(res);
+      if (res.data.success && res.data.product?.reviews) {
+        setReviews(res.data.product.reviews);
+        socket.emit('newReview', res.data.product.reviews);
+
+        setRating(0);
+        setComment('');
+        setReviewError('');
+        toast.success('Review submitted!');
+      } else {
+        toast.error(res.data.message || 'Failed to add review');
+      }
+    } catch (err) {
+      toast.error('Error submitting review');
+      console.error(err);
+    }
+  };
 
   const fetchProductData = () => {
     products.forEach((item) => {
       if (item._id === productId) {
         setProductData(item);
         setImage(item.image[0]);
-        setSelectedSize(item.sizes[0]); // <-- Default first size
+        setSelectedSize(item.sizes[0]);
       }
     });
   };
 
   useEffect(() => {
     fetchProductData();
-    setQuantity(1); // reset quantity when product changes
+    setQuantity(1);
   }, [productId, products]);
 
   if (!productData) {
@@ -146,7 +260,6 @@ export default function Product() {
                 addToCart(productData._id, quantity, selectedSize);
                 toast.success(`${productData.name} added to cart!`);
               }}
-              // Pass selected size to addToCart
             >
               Add to cart
             </button>
@@ -199,6 +312,19 @@ export default function Product() {
           </div>
         </div>
       </div>
+
+      {/* ⭐ Review Section */}
+      <ReviewsSection
+        reviews={reviews}
+        user={user}
+        rating={rating}
+        setRating={setRating}
+        comment={comment}
+        setComment={setComment}
+        reviewError={reviewError}
+        handleReviewSubmit={handleReviewSubmit}
+        handleDeleteSubmit={handleDeleteSubmit}
+      />
 
       {/* Related Products */}
       <RelatedProducts category={productData.category} />

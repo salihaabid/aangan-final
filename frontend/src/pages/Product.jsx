@@ -59,7 +59,7 @@ export default function Product() {
     setQuantity(1);
   }, [productId, products]);
 
-  // 🔹 Socket listeners for live updates
+  // Socket listeners for live updates
   useEffect(() => {
     socket.on('reviewAdded', (newReview) => {
       setReviews((prev) => [...prev, newReview]);
@@ -196,7 +196,7 @@ export default function Product() {
           <div className='flex items-center gap-2 mt-2 text-yellow-500'>
             <FaStar size={18} fill='currentColor' />
             <span className='text-gray-700 font-medium'>
-              {productData.rating} / 5
+              {productData.averageRating} / 5
             </span>
           </div>
 

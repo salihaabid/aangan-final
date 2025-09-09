@@ -1,13 +1,15 @@
-import { useState, useContext, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { ShopContext } from '../context/ShopContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { useLocation } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const buyNowData = location.state?.product || null;
+
   const {
     cartItems,
     products,
@@ -15,32 +17,35 @@ export default function CheckoutPage() {
     backendUrl,
     token,
     setCartItems,
-    user,
   } = useContext(ShopContext);
 
   const [coupon, setCoupon] = useState('');
   const [discount, setDiscount] = useState(0);
   const [message, setMessage] = useState('');
-  // const [errors, setErrors] = useState({});
   const [cartData, setCartData] = useState([]);
 
-  const [formData, setFormData] = useState({
-    email: '',
-    firstName: '',
-    lastName: '',
-    address: '',
-    apartment: '',
-    city: '',
-    postalCode: '',
-    phone: '',
+  //  React hook form
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      email: '',
+      firstName: '',
+      lastName: '',
+      address: '',
+      apartment: '',
+      city: '',
+      postalCode: '',
+      phone: '',
+    },
   });
 
   useEffect(() => {
     if (buyNowData) {
-      // If Buy Now triggered
       setCartData([buyNowData]);
     } else {
-      // Normal cart flow
       const itemsArray = [];
       for (const pid in cartItems) {
         for (const size in cartItems[pid]) {
@@ -80,23 +85,20 @@ export default function CheckoutPage() {
   const shipping = totalAfterDiscount > 3000 ? 0 : deliveryCharges;
   const total = totalAfterDiscount + shipping;
 
-  const onSubmitHandler = async (e) => {
-    e.preventDefault();
+  const onSubmitHandler = async (data) => {
     try {
       let orderItems = [];
 
       if (buyNowData) {
-        // Normalize Buy Now product shape
         orderItems.push({
           _id: buyNowData.id,
           name: buyNowData.name,
           price: buyNowData.price,
           quantity: buyNowData.qty,
           size: buyNowData.size,
-          image: [buyNowData.img], // match what Orders.jsx expects
+          image: [buyNowData.img],
         });
       } else {
-        // Normal cart checkout
         for (const items in cartItems) {
           for (const item in cartItems[items]) {
             if (cartItems[items][item] > 0) {
@@ -114,7 +116,7 @@ export default function CheckoutPage() {
       }
 
       let orderData = {
-        shippingDetails: formData,
+        shippingDetails: data, // react-hook-form data comes directly here
         products: orderItems,
         payment: total,
       };
@@ -124,16 +126,21 @@ export default function CheckoutPage() {
         orderData,
         { headers: { token } }
       );
+
       if (response.data.success) {
         setCartItems({});
         navigate('/orders');
       } else {
-        console.log(response.data);
-        toast.error(response.data.message);
+        toast.error(response.data.message || 'Something went wrong 😢');
       }
     } catch (error) {
-      console.log(error);
-      toast.error(error.message);
+      if (error.response?.status === 401) {
+        // Unauthorized
+        toast.error('⚠️ Please login to place an order');
+        navigate('/login'); // take user to login page
+      } else {
+        toast.error(error.response?.data?.message || error.message);
+      }
     }
   };
 
@@ -143,7 +150,7 @@ export default function CheckoutPage() {
         {/* Left: Contact & Delivery */}
         <form
           className='p-8 border-r-2 border-[#77846a]/80'
-          onSubmit={onSubmitHandler}
+          onSubmit={handleSubmit(onSubmitHandler)}
         >
           <h2 className='text-2xl font-semibold mb-6 text-[#2a4125]'>
             Contact
@@ -151,13 +158,12 @@ export default function CheckoutPage() {
           <input
             type='email'
             placeholder='Email *'
-            value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
+            {...register('email', { required: 'Email is required' })}
             className='w-full border rounded-lg px-4 py-2 mb-1 focus:ring-0 focus:outline-none'
-            required
           />
+          {errors.email && (
+            <p className='text-red-500 text-sm'>{errors.email.message}</p>
+          )}
 
           <div className='flex items-center mb-6'>
             <input
@@ -175,51 +181,36 @@ export default function CheckoutPage() {
           <select className='w-full border rounded-lg px-4 py-2 mb-3'>
             <option>Pakistan</option>
           </select>
-          <div className='sm:grid sm:grid-cols-2 sm:gap-3'>
-            {/* First name */}
 
+          <div className='sm:grid sm:grid-cols-2 sm:gap-3'>
             <div className='w-full mb-3'>
-              <label htmlFor='firstName' className='sr-only'>
-                First name *
-              </label>
-              <div className='border rounded-lg px-4 py-2 text-[#2a4125] accent-[#2a4125] focus-within:ring-0 focus-within:outline-none focus-within:border-[#2a4125]'>
-                <input
-                  id='firstName'
-                  name='firstName'
-                  type='text'
-                  autoComplete='given-name'
-                  placeholder='First name *'
-                  value={formData.firstName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, firstName: e.target.value })
-                  }
-                  className='w-full bg-transparent border-none outline-none focus:ring-0 focus:outline-none autofill:bg-transparent'
-                  required
-                />
-              </div>
+              <input
+                type='text'
+                placeholder='First name *'
+                {...register('firstName', {
+                  required: 'First name is required',
+                })}
+                className='w-full border rounded-lg px-4 py-2 focus:ring-0 focus:outline-none'
+              />
+              {errors.firstName && (
+                <p className='text-red-500 text-sm'>
+                  {errors.firstName.message}
+                </p>
+              )}
             </div>
 
-            {/* Last name */}
-
             <div className='w-full mb-3'>
-              <label htmlFor='firstName' className='sr-only'>
-                Last name *
-              </label>
-              <div className='border rounded-lg px-4 py-2 text-[#2a4125] accent-[#2a4125] focus-within:ring-0 focus-within:outline-none focus-within:border-[#2a4125]'>
-                <input
-                  id='lastName'
-                  name='lastName'
-                  type='text'
-                  autoComplete='given-name'
-                  placeholder='Last name *'
-                  value={formData.lastName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, lastName: e.target.value })
-                  }
-                  className='w-full bg-transparent border-none outline-none focus:ring-0 focus:outline-none autofill:bg-transparent'
-                  required
-                />
-              </div>
+              <input
+                type='text'
+                placeholder='Last name *'
+                {...register('lastName', { required: 'Last name is required' })}
+                className='w-full border rounded-lg px-4 py-2 focus:ring-0 focus:outline-none'
+              />
+              {errors.lastName && (
+                <p className='text-red-500 text-sm'>
+                  {errors.lastName.message}
+                </p>
+              )}
             </div>
           </div>
 
@@ -227,64 +218,41 @@ export default function CheckoutPage() {
             <input
               type='text'
               placeholder='Address *'
-              value={formData.address}
-              onChange={(e) =>
-                setFormData({ ...formData, address: e.target.value })
-              }
+              {...register('address', { required: 'Address is required' })}
               className='w-full border rounded-lg px-4 py-2 focus:ring-0 focus:outline-none'
-              required
             />
+            {errors.address && (
+              <p className='text-red-500 text-sm'>{errors.address.message}</p>
+            )}
           </div>
 
           <input
             type='text'
             placeholder='Apartment, suite, etc. (optional)'
-            value={formData.apartment}
-            onChange={(e) =>
-              setFormData({ ...formData, apartment: e.target.value })
-            }
+            {...register('apartment')}
             className='w-full border rounded-lg px-4 py-2 mt-3 focus:ring-0 focus:outline-none'
           />
+
           <div className='sm:grid sm:grid-cols-2 sm:gap-3 mt-3'>
-            {/* City */}
             <div className='w-full mb-3'>
-              <label htmlFor='city' className='sr-only'>
-                City *
-              </label>
-              <div className='border rounded-lg px-4 py-2 text-[#2a4125] accent-[#2a4125] focus-within:ring-0 focus-within:outline-none focus-within:border-[#2a4125]'>
-                <input
-                  id='city'
-                  name='city'
-                  type='text'
-                  placeholder='City *'
-                  value={formData.city}
-                  onChange={(e) =>
-                    setFormData({ ...formData, city: e.target.value })
-                  }
-                  className='w-full bg-transparent border-none outline-none focus:ring-0 focus:outline-none autofill:bg-transparent'
-                  required
-                />
-              </div>
+              <input
+                type='text'
+                placeholder='City *'
+                {...register('city', { required: 'City is required' })}
+                className='w-full border rounded-lg px-4 py-2 focus:ring-0 focus:outline-none'
+              />
+              {errors.city && (
+                <p className='text-red-500 text-sm'>{errors.city.message}</p>
+              )}
             </div>
 
-            {/* Postal Code */}
             <div className='w-full mb-3'>
-              <label htmlFor='postalCode' className='sr-only'>
-                Postal code
-              </label>
-              <div className='border rounded-lg px-4 py-2 text-[#2a4125] accent-[#2a4125] focus-within:ring-0 focus-within:outline-none focus-within:border-[#2a4125]'>
-                <input
-                  id='postalCode'
-                  name='postalCode'
-                  type='text'
-                  placeholder='Postal code (optional)'
-                  value={formData.postalCode}
-                  onChange={(e) =>
-                    setFormData({ ...formData, postalCode: e.target.value })
-                  }
-                  className='w-full bg-transparent border-none outline-none focus:ring-0 focus:outline-none autofill:bg-transparent'
-                />
-              </div>
+              <input
+                type='text'
+                placeholder='Postal code (optional)'
+                {...register('postalCode')}
+                className='w-full border rounded-lg px-4 py-2 focus:ring-0 focus:outline-none'
+              />
             </div>
           </div>
 
@@ -292,13 +260,12 @@ export default function CheckoutPage() {
             <input
               type='text'
               placeholder='Phone *'
-              value={formData.phone}
-              onChange={(e) =>
-                setFormData({ ...formData, phone: e.target.value })
-              }
+              {...register('phone', { required: 'Phone is required' })}
               className='w-full border rounded-lg px-4 py-2 focus:ring-0 focus:outline-none'
-              required
             />
+            {errors.phone && (
+              <p className='text-red-500 text-sm'>{errors.phone.message}</p>
+            )}
           </div>
 
           <h2 className='text-2xl font-semibold mt-8 mb-4 text-[#2a4125]'>
@@ -373,8 +340,7 @@ export default function CheckoutPage() {
             <button
               onClick={handleApplyCoupon}
               className='bg-[#2a4125] text-white px-6 rounded-r-xl
-               hover:bg-[#1e301b] transition-colors duration-200 cursor-pointer
-               '
+               hover:bg-[#1e301b] transition-colors duration-200 cursor-pointer'
             >
               Apply
             </button>

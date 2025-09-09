@@ -90,7 +90,7 @@ export default function Orders() {
                       Subtotal:
                     </span>{' '}
                     <span className='font-semibold'>
-                      Rs.{order.price}.00 PKR
+                      Rs.{Math.round(order.payment)}.00 PKR
                     </span>
                   </p>
                   <p className='text-[#77846a] text-sm'>

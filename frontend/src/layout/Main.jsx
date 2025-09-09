@@ -4,23 +4,19 @@ import Navbar from '../ui/Navbar';
 import Footer from '../ui/Footer';
 import SearchBar from '../ui/SearchBar';
 import ScrollToTop from '../ui/ScrollTop';
-// import { ToastContainer, toast } from 'react-toastify';
-// import 'react-toastify/dist/ReactToastify.css';
 
 export default function Main() {
   return (
     <div className='bg-light-beige'>
-      {/* <ToastContainer /> */}
+      <div className='bg-[#2a4125] text-white text-center py-2 text-md font-medium'>
+        🚚 Free shipping on orders above 3000 | 🎉 Apply <b>coupon10</b> for
+        exclusive 10% discount
+      </div>
       <Navbar />
       <SearchBar />
       <ScrollToTop />
       <Outlet />
       <Footer />
-      {/* <div className="min-h-screen bg-light-beige flex items-center justify-center">
-      <h1 className="text-4xl text-red-900 font-bold">
-        Tailwind v4 + DaisyUI Works 🎉
-      </h1> */}
-      {/* </div> */}
     </div>
   );
 }

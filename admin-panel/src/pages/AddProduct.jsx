@@ -3,58 +3,65 @@ import axios from 'axios';
 import { backendUrl } from '../layout/Main';
 import { useOutletContext } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { useForm } from 'react-hook-form';
+import { useMutation } from '@tanstack/react-query';
 
 export default function AddProduct() {
   const { token } = useOutletContext();
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [price, setPrice] = useState('');
-  const [sizes, setSizes] = useState([]);
+
+  // Local states only for checkboxes and files
   const [bestseller, setBestseller] = useState(false);
   const [deal, setDeal] = useState(false);
-  const [category, setCategory] = useState('');
-  const [image1, setImage1] = useState(false);
-  const [image2, setImage2] = useState(false);
+  const [image1, setImage1] = useState(null);
+  const [image2, setImage2] = useState(null);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    // console.log({ name, description, price, sizes, image1, image2 });
+  const { register, handleSubmit, reset } = useForm();
 
-    try {
-      const formData = new FormData();
-      formData.append('name', name);
-      formData.append('description', description);
-      formData.append('price', price);
-      formData.append('sizes', JSON.stringify(sizes));
-      formData.append('deal', deal);
-      formData.append('category', category);
-      formData.append('bestseller', bestseller);
-      image1 && formData.append('img1', image1);
-      image2 && formData.append('img2', image2);
-
+  // Define mutation with TanStack
+  const { mutate } = useMutation({
+    mutationFn: async (formData) => {
       const response = await axios.post(
         backendUrl + '/api/product/add',
         formData,
         { headers: { token } }
       );
-      console.log(response);
-      if (response.data.success) {
-        toast.success(response.data.message);
-        // Reset form
-        setName('');
-        setDescription('');
-        setPrice('');
-        setSizes([]);
-        setImage1(false);
-        setImage2(false);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        toast.success(data.message);
+        reset(); // reset hook-form inputs
         setBestseller(false);
         setDeal(false);
-        setCategory('');
+        setImage1(null);
+        setImage2(null);
+      } else {
+        toast.error(data.message);
       }
-    } catch (error) {
+    },
+    onError: (error) => {
       console.log(error);
-      toast.error(error.message);
-    }
+      toast.error(error.response?.data?.message || error.message);
+    },
+  });
+
+  const onSubmit = (data) => {
+    // convert sizes into array
+    const sizes = data.sizes ? data.sizes.split(',').map((s) => s.trim()) : [];
+
+    const formData = new FormData();
+    formData.append('name', data.name);
+    formData.append('description', data.description);
+    formData.append('price', data.price);
+    formData.append('sizes', JSON.stringify(sizes));
+    formData.append('deal', deal);
+    formData.append('category', data.category);
+    formData.append('bestseller', bestseller);
+    image1 && formData.append('img1', image1);
+    image2 && formData.append('img2', image2);
+
+    //  trigger mutation
+    mutate(formData);
   };
 
   return (
@@ -68,16 +75,15 @@ export default function AddProduct() {
 
       {/* Form */}
       <form
-        onSubmit={handleSubmit}
-        className='space-y-5 w-[80%] sm:w-[60%] ml-20 mt-10 text-[#2a4125] '
+        onSubmit={handleSubmit(onSubmit)}
+        className='space-y-5 w-[80%] sm:w-[60%] ml-20 mt-10 text-[#2a4125]'
       >
         <div>
           <label className='block text-xl font-[500] mb-2'>Product Name</label>
           <input
             type='text'
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className='w-full border border-[#77846a] rounded-lg p-2  outline-none'
+            {...register('name', { required: true })}
+            className='w-full border border-[#77846a] rounded-lg p-2 outline-none'
             placeholder='Enter product name'
           />
         </div>
@@ -85,9 +91,8 @@ export default function AddProduct() {
         <div>
           <label className='block text-xl font-[500] mb-2'>Description</label>
           <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className='w-full border border-[#77846a] rounded-lg p-2 h-24  outline-none'
+            {...register('description', { required: true })}
+            className='w-full border border-[#77846a] rounded-lg p-2 h-24 outline-none'
             placeholder='Enter product description'
           ></textarea>
         </div>
@@ -97,9 +102,8 @@ export default function AddProduct() {
             <label className='block text-xl font-[500] mb-2'>Price</label>
             <input
               type='number'
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              className='w-full border border-[#77846a] rounded-lg p-2  outline-none'
+              {...register('price', { required: true })}
+              className='w-full border border-[#77846a] rounded-lg p-2 outline-none'
               placeholder='Enter price'
             />
           </div>
@@ -110,47 +114,42 @@ export default function AddProduct() {
             </label>
             <input
               type='text'
-              value={sizes}
-              onChange={(e) =>
-                setSizes(e.target.value.split(',').map((s) => s.trim()))
-              }
-              className='w-full border border-[#77846a] rounded-lg p-2  outline-none'
+              {...register('sizes')}
+              className='w-full border border-[#77846a] rounded-lg p-2 outline-none'
               placeholder='1kg, 2kg, 3kg'
             />
           </div>
         </div>
-        {/* ✅ New Checkboxes */}
+
+        {/*  Checkboxes */}
         <div className='flex items-center gap-6'>
-          <label className='flex items-center gap-2 text-xl font-[500] '>
+          <label className='flex items-center gap-2 text-xl font-[500]'>
             <input
               type='checkbox'
-              id='bestseller'
               checked={bestseller}
               onChange={() => setBestseller((prev) => !prev)}
-              className='w-4 h-4 accent-[#2a4125] '
+              className='w-4 h-4 accent-[#2a4125]'
             />
             Best Seller
           </label>
 
-          <label className='flex items-center gap-2 text-xl font-[500] '>
+          <label className='flex items-center gap-2 text-xl font-[500]'>
             <input
               type='checkbox'
               checked={deal}
-              id='deal'
-              onChange={(e) => setDeal((prev) => !prev)}
+              onChange={() => setDeal((prev) => !prev)}
               className='w-4 h-4 accent-[#2a4125]'
             />
             Deal
           </label>
         </div>
 
-        {/* ✅ New Dropdown */}
+        {/* Dropdown */}
         <div>
-          <label className='block  mb-2 text-xl font-[500] '>Category</label>
+          <label className='block mb-2 text-xl font-[500]'>Category</label>
           <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className='w-full border border-[#77846a]  rounded-lg p-2 outline-none'
+            {...register('category', { required: true })}
+            className='w-full border border-[#77846a] rounded-lg p-2 outline-none'
           >
             <option value=''>Select Category</option>
             <option value='Mozzarella'>Mozzarella</option>
